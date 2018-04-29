@@ -1,5 +1,5 @@
-CarND · T2 · Controls Quizzes Projects
-======================================
+CarND · T2 · Model Predictive Control Quizzes
+=============================================
 
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
