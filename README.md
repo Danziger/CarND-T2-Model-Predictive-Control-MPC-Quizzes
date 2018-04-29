@@ -1,5 +1,5 @@
-CarND · T2 · Model Predictive Control Quizzes
-=============================================
+CarND · T2 · Model Predictive Control (MPC) Quizzes
+===================================================
 
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
