@@ -20,7 +20,10 @@ public:
     * Solve the model given an initial state.
     * @return the next state and actuations as a vector.
     */
-    vector<double> Solve(const Eigen::VectorXd x0, const Eigen::VectorXd coeffs);
+    vector<double> solve(
+        const Eigen::VectorXd x0,
+        const Eigen::VectorXd coeffs
+    );
 };
 
 

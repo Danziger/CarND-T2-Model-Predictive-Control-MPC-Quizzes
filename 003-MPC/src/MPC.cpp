@@ -13,8 +13,8 @@ using CppAD::AD;
 
 // CONSTANTS:
 
-// We want T to be 2 seconds, so we could use dt = 0.05 seconds and N = 20;
-const double dt = 0.05;
+// We want T to be 2 seconds, so we could use DT = 0.05 seconds and N = 20;
+const double DT = 0.05;
 const size_t N = 20;
 
 // This value assumes the model presented in the classroom is used.
@@ -27,7 +27,7 @@ const size_t N = 20;
 // presented in the classroom matched the previous radius.
 //
 // This is the length from front to CoG that has a similar radius:
-const double Lf = 2.67;
+const double LF = 2.67;
 
 // NOTE: Feel free to play around with this or do something completely different:
 const double V_REF = 40;
@@ -35,14 +35,14 @@ const double V_REF = 40;
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should establish where one variable
 // starts and another ends to make our lifes easier:
-const size_t x_start = 0;
-const size_t y_start = x_start + N;
-const size_t psi_start = y_start + N;
-const size_t v_start = psi_start + N;
-const size_t cte_start = v_start + N;
-const size_t epsi_start = cte_start + N;
-const size_t delta_start = epsi_start + N;
-const size_t a_start = delta_start + N - 1;
+const size_t START_X = 0;
+const size_t START_Y = START_X + N;
+const size_t START_PSI = START_Y + N;
+const size_t START_V = START_PSI + N;
+const size_t START_CTE = START_V + N;
+const size_t START_EPSI = START_CTE + N;
+const size_t START_DELTA = START_EPSI + N;
+const size_t START_A = START_DELTA + N - 1;
 
 
 class FG_eval {
@@ -73,23 +73,23 @@ public:
         // Reference State Cost:
 
         for (size_t t = 0; t < N; ++t) {
-            cost += CppAD::pow(vars[cte_start + t], 2);
-            cost += CppAD::pow(vars[epsi_start + t], 2);
-            cost += CppAD::pow(vars[v_start + t] - V_REF, 2);
+            cost += CppAD::pow(vars[START_CTE + t], 2);
+            cost += CppAD::pow(vars[START_EPSI + t], 2);
+            cost += CppAD::pow(vars[START_V + t] - V_REF, 2);
         }
 
         // Control Cost (minimize the use of actuators):
 
         for (size_t t = 0; t < N - 1; ++t) {
-            cost += CppAD::pow(vars[delta_start + t ], 2);
-            cost += CppAD::pow(vars[a_start + t], 2);
+            cost += CppAD::pow(vars[START_DELTA + t ], 2);
+            cost += CppAD::pow(vars[START_A + t], 2);
         }
 
         // Control Cost (minimize the value gap between sequential actuations to achieve temporal smoothness):
 
         for (size_t t = 0; t < N - 2; ++t) {
-            cost += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-            cost += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+            cost += CppAD::pow(vars[START_DELTA + t + 1] - vars[START_DELTA + t], 2);
+            cost += CppAD::pow(vars[START_A + t + 1] - vars[START_A + t], 2);
         }
 
         // The cost is stored is the first element of fg, fg[0]:
@@ -100,34 +100,34 @@ public:
 
         // Initial constraints:
         // We add 1 to each of the starting indices due to cost being located at index 0 of fg:
-        fg[1 + x_start] = vars[x_start];
-        fg[1 + y_start] = vars[y_start];
-        fg[1 + psi_start] = vars[psi_start];
-        fg[1 + v_start] = vars[v_start];
-        fg[1 + cte_start] = vars[cte_start];
-        fg[1 + epsi_start] = vars[epsi_start];
+        fg[1 + START_X] = vars[START_X];
+        fg[1 + START_Y] = vars[START_Y];
+        fg[1 + START_PSI] = vars[START_PSI];
+        fg[1 + START_V] = vars[START_V];
+        fg[1 + START_CTE] = vars[START_CTE];
+        fg[1 + START_EPSI] = vars[START_EPSI];
 
         // The rest of the constraints:
         for (size_t t = 1; t < N; ++t) {
             // State at t + 1:
-            AD<double> x1 = vars[x_start + t];
-            AD<double> y1 = vars[y_start + t];
-            AD<double> psi1 = vars[psi_start + t];
-            AD<double> v1 = vars[v_start + t];
-            AD<double> cte1 = vars[cte_start + t];
-            AD<double> epsi1 = vars[epsi_start + t];
+            AD<double> x1 = vars[START_X + t];
+            AD<double> y1 = vars[START_Y + t];
+            AD<double> psi1 = vars[START_PSI + t];
+            AD<double> v1 = vars[START_V + t];
+            AD<double> cte1 = vars[START_CTE + t];
+            AD<double> epsi1 = vars[START_EPSI + t];
 
             // State at t:
-            AD<double> x0 = vars[x_start + t - 1];
-            AD<double> y0 = vars[y_start + t - 1];
-            AD<double> psi0 = vars[psi_start + t - 1];
-            AD<double> v0 = vars[v_start + t - 1];
-            AD<double> cte0 = vars[cte_start + t - 1];
-            AD<double> epsi0 = vars[epsi_start + t - 1];
+            AD<double> x0 = vars[START_X + t - 1];
+            AD<double> y0 = vars[START_Y + t - 1];
+            AD<double> psi0 = vars[START_PSI + t - 1];
+            AD<double> v0 = vars[START_V + t - 1];
+            AD<double> cte0 = vars[START_CTE + t - 1];
+            AD<double> epsi0 = vars[START_EPSI + t - 1];
 
             // Actuators at t:
-            AD<double> delta0 = vars[delta_start + t - 1];
-            AD<double> a0 = vars[a_start + t - 1];
+            AD<double> delta0 = vars[START_DELTA + t - 1];
+            AD<double> a0 = vars[START_A + t - 1];
 
             // The idea here is to constraint this value to be 0.
             // NOTE: The use of `AD<double>` and use of `CppAD`!
@@ -136,12 +136,12 @@ public:
             AD<double> f0 = coeffs_[0] + coeffs_[1] * x0;
             AD<double> psides0 = CppAD::atan(coeffs_[1]);
 
-            fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
-            fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
-            fg[1 + psi_start + t] = psi1 - (psi0 + v0/Lf * delta0 * dt);
-            fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
-            fg[1 + cte_start + t] = cte1 - (f0 - y0 + v0 * CppAD::sin(epsi0) * dt);
-            fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 + v0/Lf * delta0 * dt);
+            fg[1 + START_X + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * DT);
+            fg[1 + START_Y + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * DT);
+            fg[1 + START_PSI + t] = psi1 - (psi0 + v0/LF * delta0 * DT);
+            fg[1 + START_V + t] = v1 - (v0 + a0 * DT);
+            fg[1 + START_CTE + t] = cte1 - (f0 - y0 + v0 * CppAD::sin(epsi0) * DT);
+            fg[1 + START_EPSI + t] = epsi1 - (psi0 - psides0 + v0/LF * delta0 * DT);
         }
     }
 };
@@ -153,7 +153,7 @@ MPC::MPC() {}
 
 MPC::~MPC() {}
 
-vector<double> MPC::Solve(
+vector<double> MPC::solve(
     const Eigen::VectorXd x0,
     const Eigen::VectorXd coeffs
 ) {
@@ -171,10 +171,10 @@ vector<double> MPC::Solve(
     // and there are 10 timesteps. The number of variables is: 4 * 10 + 2 * 9
 
     // N timesteps = N - 1 actuations:
-    size_t n_vars = N * 6 + (N - 1) * 2;
+    const size_t n_vars = N * 6 + (N - 1) * 2;
 
     // Number of constraints:
-    size_t n_constraints = N * 6;
+    const size_t n_constraints = N * 6;
 
     // Initial value of the independent variables.
     Dvector vars(n_vars);
@@ -185,12 +185,12 @@ vector<double> MPC::Solve(
     }
 
     // Set the initial variable values:
-    vars[x_start] = x;
-    vars[y_start] = y;
-    vars[psi_start] = psi;
-    vars[v_start] = v;
-    vars[cte_start] = cte;
-    vars[epsi_start] = epsi;
+    vars[START_X] = x;
+    vars[START_Y] = y;
+    vars[START_PSI] = psi;
+    vars[START_V] = v;
+    vars[START_CTE] = cte;
+    vars[START_EPSI] = epsi;
 
     // Lower and upper limits for x:
     Dvector vars_lowerbound(n_vars);
@@ -198,7 +198,7 @@ vector<double> MPC::Solve(
 
     // Set all non-actuators upper and lowerlimits
     // to the max negative and positive values:
-    for (size_t i = 0; i < delta_start; ++i) {
+    for (size_t i = 0; i < START_DELTA; ++i) {
         vars_lowerbound[i] = -1.0e19;
         vars_upperbound[i] = 1.0e19;
     }
@@ -206,14 +206,14 @@ vector<double> MPC::Solve(
     // The upper and lower limits of delta are set to -25 and 25
     // degrees (values in radians):
     // NOTE: Feel free to change this to something else.
-    for (size_t i = delta_start; i < a_start; ++i) {
+    for (size_t i = START_DELTA; i < START_A; ++i) {
         vars_lowerbound[i] = -0.436332;
         vars_upperbound[i] = 0.436332;
     }
 
     // Acceleration/decceleration upper and lower limits:
     // NOTE: Feel free to change this to something else.
-    for (size_t i = a_start; i < n_vars; ++i) {
+    for (size_t i = START_A; i < n_vars; ++i) {
         vars_lowerbound[i] = -1.0;
         vars_upperbound[i] = 1.0;
     }
@@ -230,19 +230,19 @@ vector<double> MPC::Solve(
 
     // Set the initial variable values:
 
-    constraints_lowerbound[x_start] = x;
-    constraints_lowerbound[y_start] = y;
-    constraints_lowerbound[psi_start] = psi;
-    constraints_lowerbound[v_start] = v;
-    constraints_lowerbound[cte_start] = cte;
-    constraints_lowerbound[epsi_start] = epsi;
+    constraints_lowerbound[START_X] = x;
+    constraints_lowerbound[START_Y] = y;
+    constraints_lowerbound[START_PSI] = psi;
+    constraints_lowerbound[START_V] = v;
+    constraints_lowerbound[START_CTE] = cte;
+    constraints_lowerbound[START_EPSI] = epsi;
 
-    constraints_upperbound[x_start] = x;
-    constraints_upperbound[y_start] = y;
-    constraints_upperbound[psi_start] = psi;
-    constraints_upperbound[v_start] = v;
-    constraints_upperbound[cte_start] = cte;
-    constraints_upperbound[epsi_start] = epsi;
+    constraints_upperbound[START_X] = x;
+    constraints_upperbound[START_Y] = y;
+    constraints_upperbound[START_PSI] = psi;
+    constraints_upperbound[START_V] = v;
+    constraints_upperbound[START_CTE] = cte;
+    constraints_upperbound[START_EPSI] = epsi;
 
     // Object that computes objective and constraints:
     FG_eval fg_eval(coeffs);
@@ -265,7 +265,7 @@ vector<double> MPC::Solve(
 
     // NOTE: Currently the solver has a maximum time limit of 0.5 seconds.
     // Change this as you see fit.
-    // options += "Numeric max_cpu_time          0.5\n";
+    // options += "Numeric max_cpu_time          1.5\n";
 
     // Solve the problem:
 
@@ -296,14 +296,14 @@ vector<double> MPC::Solve(
     // {...} is shorthand for creating a vector:
 
     return {
-        solution.x[x_start + 1],
-        solution.x[y_start + 1],
-        solution.x[psi_start + 1],
-        solution.x[v_start + 1],
-        solution.x[cte_start + 1],
-        solution.x[epsi_start + 1],
-        solution.x[delta_start],
-        solution.x[a_start]
+        solution.x[START_X + 1],
+        solution.x[START_Y + 1],
+        solution.x[START_PSI + 1],
+        solution.x[START_V + 1],
+        solution.x[START_CTE + 1],
+        solution.x[START_EPSI + 1],
+        solution.x[START_DELTA],
+        solution.x[START_A]
     };
 }
 
@@ -389,10 +389,14 @@ int main() {
     vector<double> a_vals = {};
 
     for (size_t i = 0; i < iters; ++i) {
-        cout << endl << " ITERATION " << i << ":" << endl;
-        cout << "────────────────────────────────" << endl << endl;
 
-        auto vars = mpc.Solve(state, coeffs);
+        cout
+            << endl
+            << " ITERATION " << i << ":" << endl
+            << "────────────────────────────────" << endl
+            << endl;
+
+        auto vars = mpc.solve(state, coeffs);
 
         x_vals.push_back(vars[0]);
         y_vals.push_back(vars[1]);
@@ -408,15 +412,16 @@ int main() {
 
         // LOG:
 
-        cout << "     X = " << vars[0] << endl;
-        cout << "     Y = " << vars[1] << endl;
-        cout << "   PSI = " << vars[2] << endl;
-        cout << "     V = " << vars[3] << endl;
-        cout << "   CTE = " << vars[4] << endl;
-        cout << "  EPSI = " << vars[5] << endl;
-        cout << " DELTA = " << vars[6] << endl;
-        cout << "     A = " << vars[7] << endl;
-        cout << endl;
+        cout
+            << "     X = " << vars[0] << endl
+            << "     Y = " << vars[1] << endl
+            << "   PSI = " << vars[2] << endl
+            << "     V = " << vars[3] << endl
+            << "   CTE = " << vars[4] << endl
+            << "  EPSI = " << vars[5] << endl
+            << " DELTA = " << vars[6] << endl
+            << "     A = " << vars[7] << endl
+            << endl;
     }
 
     // PLOT:
