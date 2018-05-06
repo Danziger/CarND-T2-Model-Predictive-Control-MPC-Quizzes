@@ -11,9 +11,9 @@ namespace plt = matplotlibcpp;
 using CppAD::AD;
 
 
-// We want T to be 2 seconds, so we could use dt = 0.05 seconds and N = 40
+// We want T to be 2 seconds, so we could use dt = 0.05 seconds and N = 20
 const double dt = 0.05;
-size_t N = 25;
+size_t N = 20;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -62,7 +62,7 @@ public:
         CppAD::AD<double> cost = 0;
 
         // COSTS:
-        // Define the cost related the reference state and anything you think may be beneficial:
+        // Define the cost related to the reference state and anything you think may be beneficial:
 
         // Reference State Cost:
 
@@ -147,19 +147,24 @@ MPC::MPC() {}
 
 MPC::~MPC() {}
 
-vector<double> MPC::Solve(const Eigen::VectorXd x0, const Eigen::VectorXd coeffs) {
+vector<double> MPC::Solve(
+    const Eigen::VectorXd x0,
+    const Eigen::VectorXd coeffs
+) {
     typedef CPPAD_TESTVECTOR(double) Dvector;
 
-    double x = x0[0];
-    double y = x0[1];
-    double psi = x0[2];
-    double v = x0[3];
-    double cte = x0[4];
-    double epsi = x0[5];
+    const double x = x0[0];
+    const double y = x0[1];
+    const double psi = x0[2];
+    const double v = x0[3];
+    const double cte = x0[4];
+    const double epsi = x0[5];
 
-    // Number of independent variables:
+    // Number of independent variables (includes both states and inputs):
+    // For example, if the state is a 4 element vector, the actuators is a 2 element vector
+    // and there are 10 timesteps. The number of variables is: 4 * 10 + 2 * 9
 
-    // N timesteps == N - 1 actuations:
+    // N timesteps = N - 1 actuations:
     size_t n_vars = N * 6 + (N - 1) * 2;
 
     // Number of constraints:
@@ -237,12 +242,24 @@ vector<double> MPC::Solve(const Eigen::VectorXd x0, const Eigen::VectorXd coeffs
     FG_eval fg_eval(coeffs);
 
     // Options:
+    // NOTE: You don't have to worry about these options.
 
     string options;
 
+    // Uncomment this if you'd like more print information
     options += "Integer print_level  0\n";
+
+    // NOTE: Setting sparse to true allows the solver to take advantage
+    // of sparse routines, this makes the computation MUCH FASTER. If you
+    // can uncomment 1 of these and see if it makes a difference or not but
+    // if you uncomment both the computation time should go up in orders of
+    // magnitude.
     options += "Sparse  true        forward\n";
-    options += "Sparse  true        reverse\n";    
+    options += "Sparse  true        reverse\n";
+
+    // NOTE: Currently the solver has a maximum time limit of 0.5 seconds.
+    // Change this as you see fit.
+    // options += "Numeric max_cpu_time          0.5\n";
 
     // Solve the problem:
 
@@ -269,6 +286,8 @@ vector<double> MPC::Solve(const Eigen::VectorXd x0, const Eigen::VectorXd coeffs
     } else {
         cout << "There was an error calculating the solution." << endl << endl;
     }    
+
+    // {...} is shorthand for creating a vector:
 
     return {
         solution.x[x_start + 1],
@@ -314,11 +333,9 @@ Eigen::VectorXd polyfit(
 
     Eigen::MatrixXd A(xvalsSize, order + 1);
 
-    for (Eigen::Index i = 0; i < xvalsSize; ++i) {
-        A(i, 0) = 1.0;
-    }
-
     for (Eigen::Index j = 0; j < xvalsSize; ++j) {
+        A(j, 0) = 1.0;
+
         for (size_t i = 0; i < order; ++i) {
             A(j, i + 1) = A(j, i) * xvals(j);
         }
