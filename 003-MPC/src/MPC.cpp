@@ -32,9 +32,9 @@ const double LF = 2.67;
 // NOTE: Feel free to play around with this or do something completely different:
 const double V_REF = 40;
 
-// The solver takes all the state variables and actuator
-// variables in a singular vector. Thus, we should establish where one variable
-// starts and another ends to make our lifes easier:
+// The solver takes all the state variables and actuator variables in a
+// single vector. Thus, we should establish where one variable starts and
+// another ends to make our lifes easier:
 const size_t START_X = 0;
 const size_t START_Y = START_X + N;
 const size_t START_PSI = START_Y + N;
@@ -44,6 +44,8 @@ const size_t START_EPSI = START_CTE + N;
 const size_t START_DELTA = START_EPSI + N;
 const size_t START_A = START_DELTA + N - 1;
 
+
+// FG_eval CLASS DEFINITION:
 
 class FG_eval {
 
@@ -133,8 +135,8 @@ public:
             // NOTE: The use of `AD<double>` and use of `CppAD`!
             // This is also CppAD can compute derivatives and pass these to the solver.
 
-            AD<double> f0 = coeffs_[0] + coeffs_[1] * x0;
-            AD<double> psides0 = CppAD::atan(coeffs_[1]);
+            AD<double> f0 = coeffs_[0] + coeffs_[1] * x0; // f(x0)
+            AD<double> psides0 = CppAD::atan(coeffs_[1]); // f'(x0)
 
             fg[1 + START_X + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * DT);
             fg[1 + START_Y + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * DT);
@@ -284,8 +286,8 @@ vector<double> MPC::solve(
 
     // Check some of the solution values:
 
-    bool ok = solution.status == CppAD::ipopt::solve_result<Dvector>::success;
-    auto cost = solution.obj_value;
+    const bool ok = solution.status == CppAD::ipopt::solve_result<Dvector>::success;
+    const auto cost = solution.obj_value;
 
     if (ok) {
         cout << "  COST = " << cost << endl;
