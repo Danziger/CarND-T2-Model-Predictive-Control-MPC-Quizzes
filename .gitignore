@@ -1,7 +1,7 @@
 .vscode
+.vs
 *build
 tags
 .editorconfig
 .DS_Store
-.vs
 Ipopt-*
